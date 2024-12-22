@@ -308,6 +308,15 @@ class DiscordLevelingSystem:
         else:
             raise DiscordLevelingSystemError(f'The path {path!r} does not exist or that path directs to a file when it is suppose to path to a directory')
     
+    async def commit_transaction(self) -> None:
+        """
+        Commit the current transaction to the database.
+        """
+        if self._connection:
+            await self._connection.commit()
+            print("Transaction committed successfully.")
+        else:
+            raise NotConnected("Database connection is not established.")
     def backup_database_file(self, path: str, with_timestamp: bool=False) -> None:
         """Create a copy of the database file to the specified path. If a copy of the backup file is already in the specified path it will be overwritten
         
