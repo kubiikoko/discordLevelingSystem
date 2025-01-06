@@ -130,10 +130,12 @@ def _next_level_details(current_level: int) -> NamedTuple:
                 Changed return type to a namedtuple instead of tuple
     """
     temp = current_level + 1
-    if temp > 100:
-        temp = 100
     key = str(temp)
-    val = LEVELS_AND_XP[key]
+    if key in LEVELS_AND_XP:
+        val = LEVELS_AND_XP[key]
+    else:
+        # Calculate XP needed for levels beyond the predefined ones
+        val = LEVELS_AND_XP['100'] + (temp - 100) * 50000  # Example increment
     Details = namedtuple('Details', ['level', 'xp_needed'])
     return Details(level=int(key), xp_needed=val)
 
@@ -144,16 +146,41 @@ def _find_level(current_total_xp: int) -> int: # type: ignore / this WILL return
     
         .. added:: v0.0.2
     """
-    # check if the current xp matches the xp_needed exactly
-    if current_total_xp in LEVELS_AND_XP.values():
-        for level, xp_needed in LEVELS_AND_XP.items():
-            if current_total_xp == xp_needed:
-                return int(level)
+    for level, xp_needed in LEVELS_AND_XP.items():
+        if current_total_xp < xp_needed:
+            return int(level) - 1
+    # Calculate level for XP beyond the predefined ones
+    base_xp = LEVELS_AND_XP['100']
+    if current_total_xp >= base_xp:
+        extra_levels = (current_total_xp - base_xp) // 50000
+        return 100 + extra_levels
+    return 0
+
+def get_xp_for_level(level: int) -> int:
+    """Returns the total XP needed to reach the given level.
+    
+    Parameters
+    ----------
+    level: :class:`int`
+        The level for which to get the XP.
+    
+    Returns
+    -------
+    :class:`int`
+        The total XP needed to reach the given level.
+    """
+    if level <= 100:
+        key = str(level)
+        if key in LEVELS_AND_XP:
+            return LEVELS_AND_XP[key]
+        else:
+            raise ValueError(f"Level {level} is not defined in LEVELS_AND_XP.")
     else:
-        for level, xp_needed in LEVELS_AND_XP.items():
-            if 0 <= current_total_xp <= xp_needed:
-                level = int(level)
-                level -= 1
-                if level < 0:
-                    level = 0
-                return level
+        # Calculate XP needed for levels beyond the predefined ones
+        return LEVELS_AND_XP['100'] + (level - 100) * 50000  # Example increment
+
+# Example usage:
+# xp_needed = get_xp_for_level(105)
+# print(f"XP needed for level 105: {xp_needed}")
+
+
